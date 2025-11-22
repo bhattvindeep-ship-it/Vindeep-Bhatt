@@ -2,9 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { DispatchView } from './components/DispatchView';
 import { ReceivingView } from './components/ReceivingView';
 import { DownloadsView } from './components/DownloadsView';
-import { TabView, DispatchLog, ReceivingLog } from './types';
+import { TabView, DispatchLog, ReceivingLog, DownloadLog } from './types';
 import { INITIAL_DISPATCH_DATA, INITIAL_RECEIVING_DATA, INITIAL_DOWNLOADS } from './constants';
-import { Package, ArrowDownCircle, FolderOpen, LogOut } from 'lucide-react';
+import { Package, ArrowDownCircle, FolderOpen } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabView>(TabView.DISPATCH);
@@ -12,7 +12,7 @@ const App: React.FC = () => {
   // Global State
   const [dispatchLogs, setDispatchLogs] = useState<DispatchLog[]>(INITIAL_DISPATCH_DATA);
   const [receivingLogs, setReceivingLogs] = useState<ReceivingLog[]>(INITIAL_RECEIVING_DATA);
-  const [downloadHistory] = useState(INITIAL_DOWNLOADS);
+  const [downloadHistory, setDownloadHistory] = useState<DownloadLog[]>(INITIAL_DOWNLOADS);
 
   // Derived State
   const activeDispatchLogs = useMemo(() => dispatchLogs.filter(l => l.status === 'DOCKED'), [dispatchLogs]);
@@ -60,32 +60,45 @@ const App: React.FC = () => {
     ));
   };
 
+  const handleRegisterDownload = (fileName: string, recordCount: number, type: 'DISPATCH' | 'RECEIVING') => {
+    const newDownload: DownloadLog = {
+        id: `dl-${Date.now()}`,
+        fileName,
+        date: new Date().toISOString(),
+        recordCount,
+        type
+    };
+    setDownloadHistory(prev => [newDownload, ...prev]);
+  };
+
+  const handleClearHistory = () => {
+    setDownloadHistory([]);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-center items-center flex-col text-center">
-            <h1 className="text-3xl font-bold text-slate-900">Dock Management System</h1>
-            <p className="mt-1 text-sm text-slate-500">Track vehicle dock-in and dock-out activities</p>
-          </div>
+      <header className="bg-white pt-8 pb-4 px-4 sm:px-6 lg:px-8 shadow-sm z-10">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dock Management System</h1>
+          <p className="mt-1 text-sm text-slate-500">Track vehicle dock-in and dock-out activities</p>
         </div>
         
         {/* Navigation Tabs */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-          <nav className="flex space-x-8 border-b border-slate-200" aria-label="Tabs">
+        <div className="max-w-7xl mx-auto mt-8">
+          <nav className="flex shadow-sm rounded-t-lg overflow-hidden divide-x divide-slate-200 border border-slate-200 bg-white" aria-label="Tabs">
             <button
               onClick={() => setActiveTab(TabView.DISPATCH)}
               className={`
-                group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm flex-1 justify-center transition-colors
+                group relative min-w-0 flex-1 overflow-hidden py-4 px-4 text-center text-sm font-medium hover:bg-slate-50 focus:z-10 transition-colors flex items-center justify-center
                 ${activeTab === TabView.DISPATCH 
-                  ? 'border-primary-500 text-primary-600' 
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}
+                  ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600' 
+                  : 'text-slate-500 bg-white hover:text-slate-700 border-b-2 border-transparent'}
               `}
             >
               <Package className={`
-                -ml-0.5 mr-2 h-5 w-5
-                ${activeTab === TabView.DISPATCH ? 'text-primary-500' : 'text-slate-400 group-hover:text-slate-500'}
+                flex-shrink-0 -ml-1 mr-2 h-5 w-5
+                ${activeTab === TabView.DISPATCH ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-500'}
               `} />
               Dispatch
             </button>
@@ -93,15 +106,15 @@ const App: React.FC = () => {
             <button
               onClick={() => setActiveTab(TabView.RECEIVING)}
               className={`
-                group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm flex-1 justify-center transition-colors
+                group relative min-w-0 flex-1 overflow-hidden py-4 px-4 text-center text-sm font-medium hover:bg-slate-50 focus:z-10 transition-colors flex items-center justify-center
                 ${activeTab === TabView.RECEIVING 
-                  ? 'border-primary-500 text-primary-600' 
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}
+                  ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600' 
+                  : 'text-slate-500 bg-white hover:text-slate-700 border-b-2 border-transparent'}
               `}
             >
               <ArrowDownCircle className={`
-                -ml-0.5 mr-2 h-5 w-5
-                ${activeTab === TabView.RECEIVING ? 'text-primary-500' : 'text-slate-400 group-hover:text-slate-500'}
+                flex-shrink-0 -ml-1 mr-2 h-5 w-5
+                ${activeTab === TabView.RECEIVING ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-500'}
               `} />
               Receiving
             </button>
@@ -109,15 +122,15 @@ const App: React.FC = () => {
             <button
               onClick={() => setActiveTab(TabView.DOWNLOADS)}
               className={`
-                group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm flex-1 justify-center transition-colors
+                group relative min-w-0 flex-1 overflow-hidden py-4 px-4 text-center text-sm font-medium hover:bg-slate-50 focus:z-10 transition-colors flex items-center justify-center
                 ${activeTab === TabView.DOWNLOADS 
-                  ? 'border-primary-500 text-primary-600' 
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}
+                  ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600' 
+                  : 'text-slate-500 bg-white hover:text-slate-700 border-b-2 border-transparent'}
               `}
             >
               <FolderOpen className={`
-                -ml-0.5 mr-2 h-5 w-5
-                ${activeTab === TabView.DOWNLOADS ? 'text-primary-500' : 'text-slate-400 group-hover:text-slate-500'}
+                flex-shrink-0 -ml-1 mr-2 h-5 w-5
+                ${activeTab === TabView.DOWNLOADS ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-500'}
               `} />
               Downloads
             </button>
@@ -133,6 +146,7 @@ const App: React.FC = () => {
             completedLogs={completedDispatchLogs}
             onDockIn={handleDispatchDockIn}
             onDockOut={handleDispatchDockOut}
+            onRegisterDownload={handleRegisterDownload}
           />
         )}
         {activeTab === TabView.RECEIVING && (
@@ -141,10 +155,17 @@ const App: React.FC = () => {
             completedLogs={completedReceivingLogs}
             onDockIn={handleReceivingDockIn}
             onDockOut={handleReceivingDockOut}
+            onRegisterDownload={handleRegisterDownload}
           />
         )}
         {activeTab === TabView.DOWNLOADS && (
-          <DownloadsView history={downloadHistory} />
+          <DownloadsView 
+            history={downloadHistory}
+            dispatchLogs={completedDispatchLogs}
+            receivingLogs={completedReceivingLogs}
+            onRegisterDownload={handleRegisterDownload}
+            onClearHistory={handleClearHistory}
+          />
         )}
       </main>
       
