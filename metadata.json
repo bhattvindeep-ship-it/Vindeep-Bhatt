@@ -1,0 +1,5 @@
+{
+  "name": "Dock Management System",
+  "description": "A comprehensive dashboard for tracking vehicle dock-in and dock-out activities for Dispatch and Receiving.",
+  "requestFramePermissions": []
+}
